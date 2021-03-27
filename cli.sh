@@ -119,6 +119,7 @@ function get_bgp_route(){
     # echo "token_value $token_value";
     # echo "request $token";
 
+    printf "%s" "request for ${ip}/${mask} ... ";
     curl -G -sL 'https://lg.he.net/' \
         -H 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:86.0) Gecko/20100101 Firefox/86.0' \
         -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8' \
@@ -133,6 +134,11 @@ function get_bgp_route(){
         -H 'Cache-Control: no-cache' \
         --data-urlencode "token=${token_value}" \
         --data-raw "${fremont1}" > ${ip}.html 2> ${ip}.error.html
+    if [[ $? == 0 ]]; then
+        printf "%s\n" "[ OK ]";
+    else
+        printf "%s\n" "[ Error ]";
+    fi
 }
 
 function _ip_call(){
@@ -141,7 +147,21 @@ function _ip_call(){
             _ip_help;
             exit 0;
         fi
+
+        local args=();
         for arg in ${_ip['args']}; do
+            args+=($arg);
+        done
+
+        # one argument and it is a file
+        if [[ ${#args[@]} == 1 ]]; then
+            if [[ -s ${args[0]} ]]; then
+                mapfile -t args < "${args[0]}";
+            fi
+        fi
+
+        # in either case (file|list) call get_bgp_route
+        for arg in ${args[@]}; do
             get_bgp_route "$arg";
         done
     fi
@@ -159,12 +179,12 @@ for arg in "${ARGS[@]}"; do
     case ${_options_[0]} in
         -I | --ip )
             _ip['flag']=1;
-            _ip['args']=${_options_[@]:1}
+            _ip['args']=${_options_[@]:1};
             _ip_call;
         ;;
         -L | --log)
             _log['flag']=1;
-            _log['args']=${_options_[@]:1}
+            _log['args']=${_options_[@]:1};
             _log_call;
         ;;
         -h | --help )
