@@ -60,8 +60,9 @@ _log['term']=0;
 # __help function
 ################################################################################
 function _cli_title(){
-    printf "%s\n" "helg (Hurricane Elective Looking Glass)";
-    printf "%s\n" "Request to Hurricane Elective for BGP route";
+    echo "Hurricane Electric's Network Looking Glass";
+    echo "==========================================";
+    echo "BGP Route:    Hurricane Electric Fremont 1";
 }
 
 function _ip_help(){
@@ -192,6 +193,11 @@ function get_bgp_route(){
 
         pup  "tfoot > tr:nth-child(1) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{print "$_" for "@line"}'
     fi
+
+    ################
+    # live separator
+    ################
+    echo
 }
 
 for arg in "${ARGS[@]}"; do
@@ -258,6 +264,9 @@ if [[ ${_ip['flag']} == 1 ]]; then
         exit 0;
     fi
 
+    _cli_title;
+    echo;
+
     args=();
     for arg in ${_ip['args']}; do
         args+=($arg);
@@ -275,5 +284,4 @@ if [[ ${_ip['flag']} == 1 ]]; then
         get_bgp_route "$arg";
     done
 fi
-
 
