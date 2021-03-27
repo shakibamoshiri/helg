@@ -168,9 +168,33 @@ function _ip_call(){
 }
 
 function _log_call(){
-    echo "_log_call";
-    echo "flag: ${_log['flag']}";
-    echo "args: ${_log['args']}";
+    if [[ ${_log['flag']} == 1 ]]; then
+        local args=();
+        for arg in ${_log['args']}; do
+            args+=($arg);
+        done
+
+        if [[ ${#args[@]} == 0 ]]; then
+            _log_help;
+            exit 0;
+        fi
+
+        for arg in ${args[@]}; do
+            case $arg in
+                html )
+                ;;
+                txt )
+                ;;
+                term|terminal )
+                ;;
+                * )
+                    echo "unknown option '$arg' for -L | --log";
+                ;;
+            esac
+        done
+
+    fi
+
 }
 
 for arg in "${ARGS[@]}"; do
