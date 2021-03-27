@@ -106,10 +106,45 @@ if [[ ${#ARGS[@]} == 0 ]]; then
     _help;
 fi
 
+function get_bgp_route(){
+    ip=${1///*/};
+    mask=${1//*\/};
+    server='core3.fmt1.he.net';
+
+    token_value=$(curl -sL 'https://lg.he.net/' | grep -i token | perl -lne '/(?<=value=").*?(?=")/ && print $&');
+
+    # sample
+    # fremont1="&routers%5B%5D=core3.fmt1.he.net&command=bgproute&ip=5.145.115.0%2F24&afPref=preferV6";
+    fremont1="&routers%5B%5D=${server}&command=bgproute&ip=${ip}%2F${mask}&afPref=preferV6";
+    # echo "token_value $token_value";
+    # echo "request $token";
+
+    curl -G -sL 'https://lg.he.net/' \
+        -H 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:86.0) Gecko/20100101 Firefox/86.0' \
+        -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8' \
+        -H 'Accept-Language: en-US,en;q=0.5' \
+        --compressed -H 'Referer: https://lg.he.net/' \
+        -H 'Content-Type: application/x-www-form-urlencoded' \
+        -H 'Origin: https://lg.he.net' \
+        -H 'DNT: 1' \
+        -H 'Connection: keep-alive' \
+        -H 'Upgrade-Insecure-Requests: 1' \
+        -H 'Pragma: no-cache' \
+        -H 'Cache-Control: no-cache' \
+        --data-urlencode "token=${token_value}" \
+        --data-raw "${fremont1}" > ${ip}.html 2> ${ip}.error.html
+}
+
 function _ip_call(){
-    echo "_ip_call";
-    echo "flag: ${_ip['flag']}";
-    echo "args: ${_ip['args']}";
+    if [[ ${_ip['flag']} == 1 ]]; then
+        if [[ ${#_ip['args']} == 0 ]]; then
+            _ip_help;
+            exit 0;
+        fi
+        for arg in ${_ip['args']}; do
+            get_bgp_route "$arg";
+        done
+    fi
 }
 
 function _log_call(){
