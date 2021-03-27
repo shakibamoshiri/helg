@@ -52,6 +52,9 @@ _ip['args']='';
 declare -A _log;
 _log['flag']=0;
 _log['args']='';
+_log['html']=1;
+_log['txt']=0;
+_log['term']=0;
 
 ################################################################################
 # __help function
@@ -139,62 +142,56 @@ function get_bgp_route(){
     else
         printf "%s\n" "[ Error ]";
     fi
-}
 
-function _ip_call(){
-    if [[ ${_ip['flag']} == 1 ]]; then
-        if [[ ${#_ip['args']} == 0 ]]; then
-            _ip_help;
-            exit 0;
+    ##########
+    # log html
+    ##########
+    if [[ ${_log['html']} == 1 ]]; then
+        printf "%s" "log HTML for ${ip}/${mask} ... ";
+
+        file_name=$(date '+%F-%T'___${ip});
+        perl -lne '$/=undef; /<table class="tablesorter">.*<\/table>/gs && print $&' ${ip}.html > ${file_name}.html;
+        # cat ${file_name}.html | pup | tee ${file_name}.html > /dev/null;
+
+        if [[ $? == 0 ]]; then
+            printf "%s\n" "[ OK ]";
+        else
+            printf "%s\n" "[ Error ]";
         fi
-
-        local args=();
-        for arg in ${_ip['args']}; do
-            args+=($arg);
-        done
-
-        # one argument and it is a file
-        if [[ ${#args[@]} == 1 ]]; then
-            if [[ -s ${args[0]} ]]; then
-                mapfile -t args < "${args[0]}";
-            fi
-        fi
-
-        # in either case (file|list) call get_bgp_route
-        for arg in ${args[@]}; do
-            get_bgp_route "$arg";
-        done
-    fi
-}
-
-function _log_call(){
-    if [[ ${_log['flag']} == 1 ]]; then
-        local args=();
-        for arg in ${_log['args']}; do
-            args+=($arg);
-        done
-
-        if [[ ${#args[@]} == 0 ]]; then
-            _log_help;
-            exit 0;
-        fi
-
-        for arg in ${args[@]}; do
-            case $arg in
-                html )
-                ;;
-                txt )
-                ;;
-                term|terminal )
-                ;;
-                * )
-                    echo "unknown option '$arg' for -L | --log";
-                ;;
-            esac
-        done
-
     fi
 
+    ##########
+    # log txt
+    ##########
+    if [[ ${_log['txt']} == 1 ]]; then
+        printf "%s" "log HTML for ${ip}/${mask} ... ";
+
+        pup  "thead > tr:nth-child(1) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && print "$_" for "@line"}' > ${file_name}.txt
+        if [[ $? != 0 ]]; then printf "%s\n" "[ Error ]"; fi
+
+        pup  "tbody > tr:nth-child(1) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && print "$_" for "@line"}' >> ${file_name}.txt
+        if [[ $? != 0 ]]; then printf "%s\n" "[ Error ]"; fi
+        pup  "tbody > tr:nth-child(2) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && print "$_" for "@line"}' >> ${file_name}.txt
+        if [[ $? != 0 ]]; then printf "%s\n" "[ Error ]"; fi
+
+        pup  "tfoot > tr:nth-child(1) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{print "$_" for "@line"}' >> ${file_name}.txt
+
+        if [[ $? == 0 ]]; then
+            printf "%s\n" "[ OK ]";
+        fi
+    fi
+
+    ##########
+    # log term
+    ##########
+    if [[ ${_log['term']} == 1 ]]; then
+        pup  "thead > tr:nth-child(1) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && print "$_" for "@line"}'
+
+        pup  "tbody > tr:nth-child(1) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && s/$_/\e[032;1m$_\e[0m/g && print "$_" for "@line"}'
+        pup  "tbody > tr:nth-child(2) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && print "$_" for "@line"}'
+
+        pup  "tfoot > tr:nth-child(1) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{print "$_" for "@line"}'
+    fi
 }
 
 for arg in "${ARGS[@]}"; do
@@ -204,12 +201,10 @@ for arg in "${ARGS[@]}"; do
         -I | --ip )
             _ip['flag']=1;
             _ip['args']=${_options_[@]:1};
-            _ip_call;
         ;;
         -L | --log)
             _log['flag']=1;
             _log['args']=${_options_[@]:1};
-            _log_call;
         ;;
         -h | --help )
             _help;
@@ -219,3 +214,66 @@ for arg in "${ARGS[@]}"; do
         ;;
     esac
 done
+
+
+################################################################################
+# set and check --log
+################################################################################
+if [[ ${_log['flag']} == 1 ]]; then
+    args=();
+    for arg in ${_log['args']}; do
+        args+=($arg);
+    done
+
+    if [[ ${#args[@]} == 0 ]]; then
+        _log_help;
+        exit 0;
+    fi
+
+    for arg in ${args[@]}; do
+        case $arg in
+            html )
+                _log['html']=1;
+            ;;
+            txt )
+                _log['txt']=1;
+            ;;
+            term|terminal )
+                _log['term']=1;
+            ;;
+            * )
+                echo "unknown option '$arg' for -L | --log";
+            ;;
+        esac
+    done
+fi
+
+
+################################################################################
+# set and check --ip
+################################################################################
+if [[ ${_ip['flag']} == 1 ]]; then
+    if [[ ${#_ip['args']} == 0 ]]; then
+        _ip_help;
+        exit 0;
+    fi
+
+    args=();
+    for arg in ${_ip['args']}; do
+        args+=($arg);
+    done
+
+    # one argument and it is a file
+    if [[ ${#args[@]} == 1 ]]; then
+        if [[ -s ${args[0]} ]]; then
+            mapfile -t args < "${args[0]}";
+        fi
+    fi
+
+    # in either case (file|list) call get_bgp_route
+    for arg in ${args[@]}; do
+        get_bgp_route "$arg";
+    done
+fi
+
+
