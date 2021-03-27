@@ -122,7 +122,7 @@ function get_bgp_route(){
     # echo "token_value $token_value";
     # echo "request $token";
 
-    printf "%s" "request for ${ip}/${mask} ... ";
+    printf "%-30s %s" "curl:${ip}/${mask}~" "~" | tr ' ~' '. ';
     curl -G -sL 'https://lg.he.net/' \
         -H 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:86.0) Gecko/20100101 Firefox/86.0' \
         -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8' \
@@ -137,26 +137,27 @@ function get_bgp_route(){
         -H 'Cache-Control: no-cache' \
         --data-urlencode "token=${token_value}" \
         --data-raw "${fremont1}" > ${ip}.html 2> ${ip}.error.html
+
     if [[ $? == 0 ]]; then
-        printf "%s\n" "[ OK ]";
+        printf "[ $(colorize 'green' 'OK') ]\n";
     else
-        printf "%s\n" "[ Error ]";
+        printf "[ $(colorize 'red' 'Error') ]\n";
     fi
 
     ##########
     # log html
     ##########
     if [[ ${_log['html']} == 1 ]]; then
-        printf "%s" "log HTML for ${ip}/${mask} ... ";
+        printf "%-30s %s" "html-log:${ip}/${mask}~" "~" | tr ' ~' '. ';
 
         file_name=$(date '+%F-%T'___${ip});
         perl -lne '$/=undef; /<table class="tablesorter">.*<\/table>/gs && print $&' ${ip}.html > ${file_name}.html;
         # cat ${file_name}.html | pup | tee ${file_name}.html > /dev/null;
 
         if [[ $? == 0 ]]; then
-            printf "%s\n" "[ OK ]";
+            printf "[ $(colorize 'green' 'OK') ]\n";
         else
-            printf "%s\n" "[ Error ]";
+            printf "[ $(colorize 'red' 'Error') ]\n";
         fi
     fi
 
@@ -164,20 +165,19 @@ function get_bgp_route(){
     # log txt
     ##########
     if [[ ${_log['txt']} == 1 ]]; then
-        printf "%s" "log HTML for ${ip}/${mask} ... ";
+        printf "%-30s %s" "txt-log:${ip}/${mask}~" "~" | tr ' ~' '. ';
 
         pup  "thead > tr:nth-child(1) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && print "$_" for "@line"}' > ${file_name}.txt
-        if [[ $? != 0 ]]; then printf "%s\n" "[ Error ]"; fi
 
         pup  "tbody > tr:nth-child(1) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && print "$_" for "@line"}' >> ${file_name}.txt
-        if [[ $? != 0 ]]; then printf "%s\n" "[ Error ]"; fi
         pup  "tbody > tr:nth-child(2) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && print "$_" for "@line"}' >> ${file_name}.txt
-        if [[ $? != 0 ]]; then printf "%s\n" "[ Error ]"; fi
 
         pup  "tfoot > tr:nth-child(1) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{print "$_" for "@line"}' >> ${file_name}.txt
 
         if [[ $? == 0 ]]; then
-            printf "%s\n" "[ OK ]";
+            printf "[ $(colorize 'green' 'OK') ]\n";
+        else
+            printf "[ $(colorize 'red' 'Error') ]\n";
         fi
     fi
 
