@@ -86,6 +86,8 @@ function _pre_help(){
 
 
 function _help(){
+    echo "$(_cli_title)"
+    echo
     printf "%-25s %s\n" "-h │ --help" "show / print help";
     echo
     echo "$(_ip_help)"
@@ -93,8 +95,6 @@ function _help(){
     echo "$(_log_help)"
     echo
     echo "$(_pre_help)"
-    echo
-    echo "$(_cli_title)"
     echo
     echo "Developer Shakiba Moshiri"
     echo "source    https://github.com/k-five/helg"
