@@ -88,6 +88,26 @@ the `--log` option has three mode:
 # note that HTML log is enable by default
 ```
 
+## automation
+It will be useful if we automate requests and later check the log.
+
+### crontab
+```bash
+# every hour at minute 0
+# 12:00
+# 13:00
+# 14:00
+# etc
+
+WD='/add/your/working/directory'
+0 */1 * * * cd $WD && ./cli.sh --ip ips-file --log txt
+
+# or if you renamed the "cli.sh" to "helg"
+WD='/add/your/working/directory'
+0 */1 * * * cd $WD && helg --ip ips-file --log txt
+```
+
+
 ## NOTE
 Hurricane Electric website : https://lg.he.net/  
 Router (as default): Hurricane Electric Fremont 1  
