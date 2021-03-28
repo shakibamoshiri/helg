@@ -167,13 +167,21 @@ function log_txt(){
     printf "%-30s %s" "txt-log:~" "~" | tr ' ~' '. ';
 
     {
-        pup  "thead > tr:nth-child(1) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && print "$_" for "@line"}';
+        pup  "thead > tr:nth-child(1) text{}" < ${file_name}.html | tr ' ' '-' | xargs echo
+        pup  "tbody > tr:nth-child(1) text{}" < ${file_name}.html | xargs echo | perl -lpe 's/( , ?)/,/g'
+        pup  "tbody > tr:nth-child(2) text{}" < ${file_name}.html | xargs echo | perl -lpe 's/( , ?)/,/g'
+    } | while read line; do
+        args=();
+        for arg in "$line"; do
+            args+=($arg)
+        done
+        printf "%-15s %-20s %-15s %-10s %-10s %-10s"  "${args[@]:0:6}"
+        printf "%-40s"  "${args[@]:6:1}"
+        printf "%-10s %s"  "${args[@]:7}"
+        echo;
+    done > ${file_name}.txt;
 
-        pup  "tbody > tr:nth-child(1) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && print "$_" for "@line"}';
-        pup  "tbody > tr:nth-child(2) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && print "$_" for "@line"}';
-
-        pup  "tfoot > tr:nth-child(1) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{print "$_" for "@line"}';
-    } > ${file_name}.txt;
+    pup  "tfoot > tr:nth-child(1) text{}" < ${file_name}.html | xargs echo >> ${file_name}.txt;
 
     if [[ $? == 0 ]]; then
         printf "[ $(colorize 'green' 'OK') ]\n";
