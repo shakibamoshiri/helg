@@ -110,20 +110,15 @@ if [[ ${#ARGS[@]} == 0 ]]; then
     _help;
 fi
 
-function get_bgp_route(){
-    ip=${1///*/};
-    mask=${1//*\/};
-    server='core3.fmt1.he.net';
+function request(){
+    # passed order
+    # request $ip $make $token_value $fremont1;
+    local ip=$1;
+    local mask=$2;
+    local token_value=$3;
+    local fremont1=$4;
 
-    token_value=$(curl -sL 'https://lg.he.net/' | grep -i token | perl -lne '/(?<=value=").*?(?=")/ && print $&');
-
-    # sample
-    # fremont1="&routers%5B%5D=core3.fmt1.he.net&command=bgproute&ip=5.145.115.0%2F24&afPref=preferV6";
-    fremont1="&routers%5B%5D=${server}&command=bgproute&ip=${ip}%2F${mask}&afPref=preferV6";
-    # echo "token_value $token_value";
-    # echo "request $token";
-
-    printf "%-30s %s" "curl:${ip}/${mask}~" "~" | tr ' ~' '. ';
+    printf "%-30s %s" "request-for:${ip}/${mask}~" "~" | tr ' ~' '. ';
     curl -G -sL 'https://lg.he.net/' \
         -H 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:86.0) Gecko/20100101 Firefox/86.0' \
         -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8' \
@@ -144,54 +139,93 @@ function get_bgp_route(){
     else
         printf "[ $(colorize 'red' 'Error') ]\n";
     fi
+}
+
+function log_html(){
+    # passed order
+    # log_html $ip $file_name
+    local ip=$1;
+    local file_name=$2;
+    printf "%-30s %s" "html-log:~" "~" | tr ' ~' '. ';
+
+    perl -lne '$/=undef; /<table class="tablesorter">.*<\/table>/gs && print $&' ${ip}.html > ${file_name};
+    # cat ${file_name}.html | pup | tee ${file_name}.html > /dev/null;
+
+    if [[ $? == 0 ]]; then
+        printf "[ $(colorize 'green' 'OK') ]\n";
+    else
+        printf "[ $(colorize 'red' 'Error') ]\n";
+    fi
+}
+
+function log_txt(){
+    local file_name=$1;
+    printf "%-30s %s" "txt-log:~" "~" | tr ' ~' '. ';
+
+    {
+        pup  "thead > tr:nth-child(1) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && print "$_" for "@line"}';
+
+        pup  "tbody > tr:nth-child(1) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && print "$_" for "@line"}';
+        pup  "tbody > tr:nth-child(2) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && print "$_" for "@line"}';
+
+        pup  "tfoot > tr:nth-child(1) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{print "$_" for "@line"}';
+    } > ${file_name}.txt;
+
+    if [[ $? == 0 ]]; then
+        printf "[ $(colorize 'green' 'OK') ]\n";
+    else
+        printf "[ $(colorize 'red' 'Error') ]\n";
+    fi
+}
+
+function log_term(){
+    local file_name=$1;
+    pup  "thead > tr:nth-child(1) text{}" < ${file_name} | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && print "$_" for "@line"}'
+
+    pup  "tbody > tr:nth-child(1) text{}" < ${file_name} | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && s/$_/\e[032;1m$_\e[0m/g && print "$_" for "@line"}'
+    pup  "tbody > tr:nth-child(2) text{}" < ${file_name} | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && print "$_" for "@line"}'
+
+    pup  "tfoot > tr:nth-child(1) text{}" < ${file_name} | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{print "$_" for "@line"}'
+}
+
+function get_bgp_route(){
+    ip=${1///*/};
+    mask=${1//*\/};
+    server='core3.fmt1.he.net';
+
+    file_name=$(date '+%F-%T'___${ip});
+    token_value=$(curl -sL 'https://lg.he.net/' | grep -i token | perl -lne '/(?<=value=").*?(?=")/ && print $&');
+
+    # sample
+    # fremont1="&routers%5B%5D=core3.fmt1.he.net&command=bgproute&ip=5.145.115.0%2F24&afPref=preferV6";
+    fremont1="&routers%5B%5D=${server}&command=bgproute&ip=${ip}%2F${mask}&afPref=preferV6";
+    # echo "token_value $token_value";
+    # echo "request $token";
+
+    ##########
+    # request
+    ##########
+    request $ip $mask $token_value $fremont1;
 
     ##########
     # log html
     ##########
     if [[ ${_log['html']} == 1 ]]; then
-        printf "%-30s %s" "html-log:${ip}/${mask}~" "~" | tr ' ~' '. ';
-
-        file_name=$(date '+%F-%T'___${ip});
-        perl -lne '$/=undef; /<table class="tablesorter">.*<\/table>/gs && print $&' ${ip}.html > ${file_name}.html;
-        # cat ${file_name}.html | pup | tee ${file_name}.html > /dev/null;
-
-        if [[ $? == 0 ]]; then
-            printf "[ $(colorize 'green' 'OK') ]\n";
-        else
-            printf "[ $(colorize 'red' 'Error') ]\n";
-        fi
+        log_html $ip ${file_name}.html;
     fi
 
     ##########
     # log txt
     ##########
     if [[ ${_log['txt']} == 1 ]]; then
-        printf "%-30s %s" "txt-log:${ip}/${mask}~" "~" | tr ' ~' '. ';
-
-        pup  "thead > tr:nth-child(1) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && print "$_" for "@line"}' > ${file_name}.txt
-
-        pup  "tbody > tr:nth-child(1) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && print "$_" for "@line"}' >> ${file_name}.txt
-        pup  "tbody > tr:nth-child(2) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && print "$_" for "@line"}' >> ${file_name}.txt
-
-        pup  "tfoot > tr:nth-child(1) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{print "$_" for "@line"}' >> ${file_name}.txt
-
-        if [[ $? == 0 ]]; then
-            printf "[ $(colorize 'green' 'OK') ]\n";
-        else
-            printf "[ $(colorize 'red' 'Error') ]\n";
-        fi
+        log_txt ${file_name};
     fi
 
     ##########
     # log term
     ##########
     if [[ ${_log['term']} == 1 ]]; then
-        pup  "thead > tr:nth-child(1) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && print "$_" for "@line"}'
-
-        pup  "tbody > tr:nth-child(1) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && s/$_/\e[032;1m$_\e[0m/g && print "$_" for "@line"}'
-        pup  "tbody > tr:nth-child(2) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && print "$_" for "@line"}'
-
-        pup  "tfoot > tr:nth-child(1) text{}" < ${file_name}.html | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{print "$_" for "@line"}'
+        log_term ${file_name}.html;
     fi
 
     ################
