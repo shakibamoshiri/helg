@@ -16,7 +16,7 @@ Before proceeding the bellow commands should already have been installed:
  - `grep`
  - [pup](https://github.com/ericchiang/pup)
 
-Plus you can check them using, and it shows you either [ ok ] or [ error ].
+Plus you can check them using below option, and it shows you either [OK] or [Error].
 ```bash
 ./cli.sh --pre check
 check prerequisites:
@@ -29,7 +29,7 @@ echo .......................... [ OK ]
 ```
 
 ## download
-close the repose using `git`:
+**clone** the repository using `git`:
 ```bash
 git clone https://github.com/k-five/helg.git && cd helg
 ```
@@ -37,10 +37,11 @@ git clone https://github.com/k-five/helg.git && cd helg
 ```bash
 ./cli.sh --pre check
 ```
+If all the check were [ OK ], then you can use or install it.
 
 ### install it
 You can use the `cli.sh` file or you may want to change the name and install it
-with a proper name e.g. `helg` and then `mv` to `/usr/local/bin` so you can run
+with a proper name e.g. `helg` and then `mv` it to `/usr/local/bin` so you can run
 it everywhere on you machine.
 ```bash
 sudo mv cli.sh /usr/local/usr/helg
@@ -60,9 +61,9 @@ many as you need. If the argument is a single one, first it checks if it is a
 file or not, if it was a file, reads it, otherwise it will assume it is an IP.
 
 the `--log` option has three mode:
- 1. html for log as html file
- 2. txt for log as txt file
- 3. term for print on Terminal (stdout)
+ 1. `html` for log as html file (enabled by default)
+ 2. `txt` for log as txt file
+ 3. `term` for print on Terminal (stdout)
 
 
 ## exampells
