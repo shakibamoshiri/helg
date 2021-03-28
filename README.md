@@ -87,3 +87,12 @@ the `--log` option has three mode:
 
 # note that HTML log is enable by default
 ```
+
+## NOTE
+Hurricane Electric website : https://lg.he.net/
+Router (as default): Hurricane Electric Fremont 1
+Address of this router: core3.fmt1.he.net
+Commands: BGP Route
+
+## developers
+Contribution and feature request are welcome.
