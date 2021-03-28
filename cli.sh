@@ -56,6 +56,10 @@ _log['html']=1;
 _log['txt']=0;
 _log['term']=0;
 
+declare -A _pre;
+_log['flag']=0;
+_log['args']='';
+
 ################################################################################
 # __help function
 ################################################################################
@@ -81,7 +85,7 @@ function _log_help(){
 function _pre_help(){
     printf "%-25s %s\n" "-P │ --pre" "check prerequisites";
     printf "%-40s %s\n" "   ├── $(colorize 'cyan' 'check')" "check prerequisite commands";
-    printf "%-40s %s\n" "   └── $(colorize 'cyan' 'show')" "show list of commands is needed";
+    printf "%-40s %s\n" "   └── $(colorize 'cyan' 'debug')" "turn on debug mode";
 }
 
 
@@ -234,6 +238,27 @@ function get_bgp_route(){
     echo
 }
 
+
+################################################################################
+function _pre_check () {
+    declare -a _cmds_;
+    _cmds_=(curl perl pup grep printf echo);
+
+    printf "check prerequisites:\n";
+    for cmd in ${_cmds_[@]}; do
+        temp_var=$(which  $cmd > /dev/null 2>&1);
+        if [[ $? != 0 ]]; then
+            printf "%-30s %s" "$cmd~" "~" | tr ' ~' '. ';
+            printf "[ $(colorize 'red' 'ERROR') ] not found\n";
+        else
+            printf "%-30s %s" "$cmd~" "~" | tr ' ~' '. ';
+            printf "[ $(colorize 'green' 'OK') ]\n";
+
+        fi
+    done
+}
+
+
 for arg in "${ARGS[@]}"; do
     mapfile -t _options_ < <(tr ' ' '\n' <<< "$arg");
 
@@ -245,6 +270,10 @@ for arg in "${ARGS[@]}"; do
         -L | --log)
             _log['flag']=1;
             _log['args']=${_options_[@]:1};
+        ;;
+        -P | --pre )
+            _pre['flag']=1;
+            _pre['args']=${_options_[@]:1};
         ;;
         -h | --help )
             _help;
@@ -319,3 +348,28 @@ if [[ ${_ip['flag']} == 1 ]]; then
     done
 fi
 
+################################################################################
+# set and check --pre
+################################################################################
+if [[ ${_pre['flag']} == 1 ]]; then
+    args=();
+    for arg in ${_pre['args']}; do
+        args+=($arg);
+    done
+
+    if [[ ${#args[@]} == 0 ]]; then
+        _pre_help;
+        exit 0;
+    fi
+
+    for arg in ${args[@]}; do
+        case $arg in
+            check )
+                _pre_check;
+            ;;
+            * )
+                echo "unknown option '$arg' for -P | --pre";
+            ;;
+        esac
+    done
+fi
