@@ -18,4 +18,4 @@ file=$1;
 
 done;
 
-pup  "tfoot > tr:nth-child(1) text{}" < $file | xargs echo
+pup  "tfoot > tr:nth-child(1) text{}" < $file | xargs echo | perl -lne 's/(?:(?!.*\d) )/-/g && print'

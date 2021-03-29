@@ -181,7 +181,7 @@ function log_txt(){
         echo;
     done > ${file_name}.txt;
 
-    pup  "tfoot > tr:nth-child(1) text{}" < ${file_name}.html | xargs echo >> ${file_name}.txt;
+    pup  "tfoot > tr:nth-child(1) text{}" < ${file_name}.html | xargs echo | perl -lne 's/(?:(?!.*\d) )/-/g && print' >> ${file_name}.txt;
 
     if [[ $? == 0 ]]; then
         printf "[ $(colorize 'green' 'OK') ]\n";
@@ -207,7 +207,7 @@ function log_term(){
         echo;
     done
 
-    pup  "tfoot > tr:nth-child(1) text{}" < ${file_name}.html | xargs echo
+    pup  "tfoot > tr:nth-child(1) text{}" < ${file_name}.html | xargs echo | perl -lne 's/(?:(?!.*\d) )/-/g && print'
 }
 
 function get_bgp_route(){
