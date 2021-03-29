@@ -58,8 +58,9 @@ _log['term']=0;
 _log['json']=0;
 
 declare -A _check;
-_log['flag']=0;
-_log['args']='';
+_check['flag']=0;
+_check['args']='';
+_check['debug']=0;
 
 ################################################################################
 # __help function
@@ -124,7 +125,10 @@ function request(){
     local token_value=$3;
     local fremont1=$4;
 
-    printf "%-30s %s" "request-for:${ip}/${mask}~" "~" | tr ' ~' '. ';
+    if [[ ${_check['debug']} == 1 ]]; then
+        printf "%-30s %s" "request-for:${ip}/${mask}~" "~" | tr ' ~' '. ';
+    fi
+
     curl -G -sL 'https://lg.he.net/' \
         -H 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:86.0) Gecko/20100101 Firefox/86.0' \
         -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8' \
@@ -140,10 +144,12 @@ function request(){
         --data-urlencode "token=${token_value}" \
         --data-raw "${fremont1}" > ${ip}.html 2> ${ip}.error.html
 
-    if [[ $? == 0 ]]; then
-        printf "[ $(colorize 'green' 'OK') ]\n";
-    else
-        printf "[ $(colorize 'red' 'Error') ]\n";
+    if [[ ${_check['debug']} == 1 ]]; then
+        if [[ $? == 0 ]]; then
+            printf "[ $(colorize 'green' 'OK') ]\n";
+        else
+            printf "[ $(colorize 'red' 'Error') ]\n";
+        fi
     fi
 }
 
@@ -152,21 +158,29 @@ function log_html(){
     # log_html $ip $file_name
     local ip=$1;
     local file_name=$2;
-    printf "%-30s %s" "html-log:~" "~" | tr ' ~' '. ';
+
+    if [[ ${_check['debug']} == 1 ]]; then
+        printf "%-30s %s" "html-log:~" "~" | tr ' ~' '. ';
+    fi
 
     perl -lne '$/=undef; /<table class="tablesorter">.*<\/table>/gs && print $&' ${ip}.html > ${file_name};
     # cat ${file_name}.html | pup | tee ${file_name}.html > /dev/null;
 
-    if [[ $? == 0 ]]; then
-        printf "[ $(colorize 'green' 'OK') ]\n";
-    else
-        printf "[ $(colorize 'red' 'Error') ]\n";
+    if [[ ${_check['debug']} == 1 ]]; then
+        if [[ $? == 0 ]]; then
+            printf "[ $(colorize 'green' 'OK') ]\n";
+        else
+            printf "[ $(colorize 'red' 'Error') ]\n";
+        fi
     fi
 }
 
 function log_txt(){
     local file_name=$1;
-    printf "%-30s %s" "txt-log:~" "~" | tr ' ~' '. ';
+
+    if [[ ${_check['debug']} == 1 ]]; then
+        printf "%-30s %s" "txt-log:~" "~" | tr ' ~' '. ';
+    fi
 
     {
         pup  "thead > tr:nth-child(1) text{}" < ${file_name}.html | tr ' ' '-' | xargs echo
@@ -185,10 +199,12 @@ function log_txt(){
 
     pup  "tfoot > tr:nth-child(1) text{}" < ${file_name}.html | xargs echo | perl -lne 's/(?:(?!.*\d) )/-/g && print' >> ${file_name}.txt;
 
-    if [[ $? == 0 ]]; then
-        printf "[ $(colorize 'green' 'OK') ]\n";
-    else
-        printf "[ $(colorize 'red' 'Error') ]\n";
+    if [[ ${_check['debug']} == 1 ]]; then
+        if [[ $? == 0 ]]; then
+            printf "[ $(colorize 'green' 'OK') ]\n";
+        else
+            printf "[ $(colorize 'red' 'Error') ]\n";
+        fi
     fi
 }
 
@@ -256,14 +272,18 @@ function get_bgp_route(){
     # log json
     ##########
     if [[ ${_log['json']} == 1 ]]; then
-        printf "%-30s %s" "json-log:~" "~" | tr ' ~' '. ';
+        if [[ ${_check['debug']} == 1 ]]; then
+            printf "%-30s %s" "json-log:~" "~" | tr ' ~' '. ';
+        fi
 
         log_term ${file_name} | jq -s -R 'split("\n") | map(select(length>0)) | map(split(" +";"g"))' > ${file_name}.json
 
-        if [[ $? == 0 ]]; then
-            printf "[ $(colorize 'green' 'OK') ]\n";
-        else
-            printf "[ $(colorize 'red' 'Error') ]\n";
+        if [[ ${_check['debug']} == 1 ]]; then
+            if [[ $? == 0 ]]; then
+                printf "[ $(colorize 'green' 'OK') ]\n";
+            else
+                printf "[ $(colorize 'red' 'Error') ]\n";
+            fi
         fi
     fi
 
@@ -404,6 +424,9 @@ if [[ ${_check['flag']} == 1 ]]; then
         case $arg in
             cmd )
                 _cmd_check;
+            ;;
+            debug )
+                _check['debug']=1;
             ;;
             * )
                 echo "unknown option '$arg' for -P | --check";
