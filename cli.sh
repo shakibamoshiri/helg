@@ -55,6 +55,7 @@ _log['args']='';
 _log['html']=1;
 _log['txt']=0;
 _log['term']=0;
+_log['json']=0;
 
 declare -A _pre;
 _log['flag']=0;
@@ -77,8 +78,9 @@ function _ip_help(){
 
 function _log_help(){
     printf "%-25s %s\n" "-L │ --log" "enable log for";
-    printf "%-40s %s\n" "   ├── $(colorize 'cyan' 'html')" "save the log in HTML format";
+    printf "%-40s %s\n" "   ├── $(colorize 'cyan' 'html')" "save the log in HTML format (default)";
     printf "%-40s %s\n" "   ├── $(colorize 'cyan' 'txt')" "save the output in txt";
+    printf "%-40s %s\n" "   ├── $(colorize 'cyan' 'json')" "save the output in JSON";
     printf "%-40s %s\n" "   └── $(colorize 'cyan' 'terminal')" "print result on screen (Terminal)";
 }
 
@@ -250,6 +252,21 @@ function get_bgp_route(){
         log_term ${file_name};
     fi
 
+    ##########
+    # log json
+    ##########
+    if [[ ${_log['json']} == 1 ]]; then
+        printf "%-30s %s" "json-log:~" "~" | tr ' ~' '. ';
+
+        log_term ${file_name} | jq -s -R 'split("\n") | map(select(length>0)) | map(split(" +";"g"))' > ${file_name}.json
+
+        if [[ $? == 0 ]]; then
+            printf "[ $(colorize 'green' 'OK') ]\n";
+        else
+            printf "[ $(colorize 'red' 'Error') ]\n";
+        fi
+    fi
+
     ################
     # live separator
     ################
@@ -327,6 +344,9 @@ if [[ ${_log['flag']} == 1 ]]; then
             ;;
             term|terminal )
                 _log['term']=1;
+            ;;
+            json )
+                _log['json']=1;
             ;;
             * )
                 echo "unknown option '$arg' for -L | --log";
