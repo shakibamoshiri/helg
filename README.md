@@ -19,7 +19,7 @@ Before proceeding the bellow commands should already have been installed:
 
 Plus you can check them using below option, and it shows you either [OK] or [Error].
 ```bash
-./cli.sh --pre check
+./cli.sh --check cmd
 check prerequisites:
 curl .......................... [ OK ]
 perl .......................... [ OK ]
@@ -36,7 +36,7 @@ git clone https://github.com/k-five/helg.git && cd helg
 ```
 ### check if you have prerequisites
 ```bash
-./cli.sh --pre check
+./cli.sh --check cmd
 ```
 If all the check were [ OK ], then you can use or install it.
 
@@ -65,6 +65,7 @@ the `--log` option has three mode:
  1. `html` for log as html file (enabled by default)
  2. `txt` for log as txt file
  3. `term` for print on Terminal (stdout)
+ 4. `json` for log as JSON file
 
 
 ## exampells
