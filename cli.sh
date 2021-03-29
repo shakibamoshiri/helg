@@ -288,7 +288,7 @@ function get_bgp_route(){
     fi
 
     ################
-    # live separator
+    # line separator
     ################
     echo
 }
@@ -429,7 +429,7 @@ if [[ ${_check['flag']} == 1 ]]; then
                 _check['debug']=1;
             ;;
             * )
-                echo "unknown option '$arg' for -P | --check";
+                echo "unknown option '$arg' for -C | --check";
             ;;
         esac
     done
