@@ -112,6 +112,9 @@ if [[ ${#} == 0 ]]; then
     _help;
 fi
 
+################################################################################
+# parse command line options
+################################################################################
 mapfile -t ARGS < <( perl -lne 'print $& while /(?:(?! -)[\s\S])+/ig' <<< "$@");
 if [[ ${#ARGS[@]} == 0 ]]; then
     _help;
@@ -228,6 +231,9 @@ function log_term(){
     pup  "tfoot > tr:nth-child(1) text{}" < ${file_name}.html | xargs echo | perl -lne 's/(?:(?!.*\d) )/-/g && print'
 }
 
+################################################################################
+# main function to send request to lg.he.net
+################################################################################
 function get_bgp_route(){
     ip=${1///*/};
     mask=${1//*\/};
@@ -294,6 +300,8 @@ function get_bgp_route(){
 }
 
 
+################################################################################
+# check for prerequisites commands
 ################################################################################
 function _cmd_check () {
     declare -a _cmds_;
@@ -375,6 +383,34 @@ if [[ ${_log['flag']} == 1 ]]; then
     done
 fi
 
+################################################################################
+# set and check --check
+################################################################################
+if [[ ${_check['flag']} == 1 ]]; then
+    args=();
+    for arg in ${_check['args']}; do
+        args+=($arg);
+    done
+
+    if [[ ${#args[@]} == 0 ]]; then
+        _check_help;
+        exit 0;
+    fi
+
+    for arg in ${args[@]}; do
+        case $arg in
+            cmd )
+                _cmd_check;
+            ;;
+            debug )
+                _check['debug']=1;
+            ;;
+            * )
+                echo "unknown option '$arg' for -C | --check";
+            ;;
+        esac
+    done
+fi
 
 ################################################################################
 # set and check --ip
@@ -406,31 +442,3 @@ if [[ ${_ip['flag']} == 1 ]]; then
     done
 fi
 
-################################################################################
-# set and check --check
-################################################################################
-if [[ ${_check['flag']} == 1 ]]; then
-    args=();
-    for arg in ${_check['args']}; do
-        args+=($arg);
-    done
-
-    if [[ ${#args[@]} == 0 ]]; then
-        _check_help;
-        exit 0;
-    fi
-
-    for arg in ${args[@]}; do
-        case $arg in
-            cmd )
-                _cmd_check;
-            ;;
-            debug )
-                _check['debug']=1;
-            ;;
-            * )
-                echo "unknown option '$arg' for -C | --check";
-            ;;
-        esac
-    done
-fi
