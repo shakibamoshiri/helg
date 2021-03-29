@@ -57,7 +57,7 @@ _log['txt']=0;
 _log['term']=0;
 _log['json']=0;
 
-declare -A _pre;
+declare -A _check;
 _log['flag']=0;
 _log['args']='';
 
@@ -84,9 +84,9 @@ function _log_help(){
     printf "%-40s %s\n" "   └── $(colorize 'cyan' 'terminal')" "print result on screen (Terminal)";
 }
 
-function _pre_help(){
-    printf "%-25s %s\n" "-P │ --pre" "check prerequisites";
-    printf "%-40s %s\n" "   ├── $(colorize 'cyan' 'check')" "check prerequisite commands";
+function _check_help(){
+    printf "%-25s %s\n" "-C │ --check" "check prerequisites";
+    printf "%-40s %s\n" "   ├── $(colorize 'cyan' 'cmd')" "check prerequisite commands";
     printf "%-40s %s\n" "   └── $(colorize 'cyan' 'debug')" "turn on debug mode";
 }
 
@@ -100,7 +100,7 @@ function _help(){
     echo
     echo "$(_log_help)"
     echo
-    echo "$(_pre_help)"
+    echo "$(_check_help)"
     echo
     echo "Developer Shakiba Moshiri"
     echo "source    https://github.com/k-five/helg"
@@ -275,9 +275,9 @@ function get_bgp_route(){
 
 
 ################################################################################
-function _pre_check () {
+function _cmd_check () {
     declare -a _cmds_;
-    _cmds_=(curl perl pup grep printf echo);
+    _cmds_=(curl perl pup jq grep printf echo);
 
     printf "check prerequisites:\n";
     for cmd in ${_cmds_[@]}; do
@@ -306,9 +306,9 @@ for arg in "${ARGS[@]}"; do
             _log['flag']=1;
             _log['args']=${_options_[@]:1};
         ;;
-        -P | --pre )
-            _pre['flag']=1;
-            _pre['args']=${_options_[@]:1};
+        -C | --check )
+            _check['flag']=1;
+            _check['args']=${_options_[@]:1};
         ;;
         -h | --help )
             _help;
@@ -387,26 +387,26 @@ if [[ ${_ip['flag']} == 1 ]]; then
 fi
 
 ################################################################################
-# set and check --pre
+# set and check --check
 ################################################################################
-if [[ ${_pre['flag']} == 1 ]]; then
+if [[ ${_check['flag']} == 1 ]]; then
     args=();
-    for arg in ${_pre['args']}; do
+    for arg in ${_check['args']}; do
         args+=($arg);
     done
 
     if [[ ${#args[@]} == 0 ]]; then
-        _pre_help;
+        _check_help;
         exit 0;
     fi
 
     for arg in ${args[@]}; do
         case $arg in
-            check )
-                _pre_check;
+            cmd )
+                _cmd_check;
             ;;
             * )
-                echo "unknown option '$arg' for -P | --pre";
+                echo "unknown option '$arg' for -P | --check";
             ;;
         esac
     done
