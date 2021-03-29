@@ -192,12 +192,22 @@ function log_txt(){
 
 function log_term(){
     local file_name=$1;
-    pup  "thead > tr:nth-child(1) text{}" < ${file_name} | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && print "$_" for "@line"}'
+    {
+        pup  "thead > tr:nth-child(1) text{}" < ${file_name}.html | tr ' ' '-' | xargs echo
+        pup  "tbody > tr:nth-child(1) text{}" < ${file_name}.html | xargs echo | perl -lpe 's/( , ?)/,/g'
+        pup  "tbody > tr:nth-child(2) text{}" < ${file_name}.html | xargs echo | perl -lpe 's/( , ?)/,/g'
+    } | while read line; do
+        args=();
+        for arg in "$line"; do
+            args+=($arg)
+        done
+        printf "%-15s %-20s %-15s %-10s %-10s %-10s"  "${args[@]:0:6}"
+        printf "%-40s"  "${args[@]:6:1}"
+        printf "%-10s %s"  "${args[@]:7}"
+        echo;
+    done
 
-    pup  "tbody > tr:nth-child(1) text{}" < ${file_name} | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && s/$_/\e[032;1m$_\e[0m/g && print "$_" for "@line"}'
-    pup  "tbody > tr:nth-child(2) text{}" < ${file_name} | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{ s/ /\t/g && print "$_" for "@line"}'
-
-    pup  "tfoot > tr:nth-child(1) text{}" < ${file_name} | perl -lne '/[a-zA-Z0-9]/ && push (@line, $_); END{print "$_" for "@line"}'
+    pup  "tfoot > tr:nth-child(1) text{}" < ${file_name}.html | xargs echo
 }
 
 function get_bgp_route(){
@@ -237,7 +247,7 @@ function get_bgp_route(){
     # log term
     ##########
     if [[ ${_log['term']} == 1 ]]; then
-        log_term ${file_name}.html;
+        log_term ${file_name};
     fi
 
     ################
