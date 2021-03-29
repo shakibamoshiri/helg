@@ -14,7 +14,8 @@ Before proceeding the bellow commands should already have been installed:
  - `echo`
  - `printf`
  - `grep`
- - [pup](https://github.com/ericchiang/pup)
+ - [pup](https://github.com/ericchiang/pup) HTML parser for `txt` output
+ - [jq](https://github.com/stedolan/jq) JSON parser for `json` output
 
 Plus you can check them using below option, and it shows you either [OK] or [Error].
 ```bash
