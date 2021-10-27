@@ -1,7 +1,7 @@
 # helg
 Hurricane Electric's Network Looking Glass
 
-Hurricane Electric as root server does provide any kind of API to request with.
+Hurricane Electric as a root server does not provide any kind of API to request to.
 It does have **telnet** over [route-server.he.net
 ](telnet://route-server.he.net/) but is not so friendly to work with, thus you
 can think of this bash CLI as pseudo-API.
