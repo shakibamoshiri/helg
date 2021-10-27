@@ -90,6 +90,10 @@ the `--log` option has three mode:
 # note that HTML log is enable by default
 ```
 
+## a shot
+
+![log term png file](log_term.png)
+
 ## automation
 It will be useful if we automate requests and later check the log.
 
